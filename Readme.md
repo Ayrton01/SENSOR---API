@@ -1,10 +1,10 @@
-# SENSOR - API 🚀
+# SENSOR - API 
 
 Este projeto consiste no desenvolvimento de uma API voltada para o monitoramento e gerenciamento de dados provenientes de sensores. O foco é garantir uma estrutura organizada, escalável e segura para lidar com fluxos de informações em tempo real.
 
 ## 📋 Documentação Completa
-Para uma compreensão profunda das decisões técnicas, consulte:
-* **[Planejamento Estratégico](./Planejamento.md)**
+Para uma compreensão profunda do projeto, consulte:
+* **[Planejamento](./Planejamento.md)**
 * **[Fases de Desenvolvimento](./Fases_Desenvolvimento.md)**
 
 ## ✨ Funcionalidades Planejadas
@@ -20,7 +20,7 @@ Para uma compreensão profunda das decisões técnicas, consulte:
 * **Segurança:** JSON Web Tokens (JWT)
 * **Testes:** Jest & Supertest
 
-## 🚀 Como começar
+## Como começar
 
 ### Pré-requisitos
 Antes de começar, você precisará ter instalado em sua máquina:
