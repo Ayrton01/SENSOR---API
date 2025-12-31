@@ -6,6 +6,10 @@ desktop.ini
 venv/
 .env
 
+# Banco de Dados (SQLite)
+*.sqlite
+*.sqlite-journal
+
 # Pastas de biblioteca
 node_modules/
 

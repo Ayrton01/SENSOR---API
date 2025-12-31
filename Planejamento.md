@@ -5,228 +5,113 @@ Data: 18 de setembro de 2025
 
 1. Visão Geral
 
-Em ambientes de manufatura modernos, a coleta de dados de sensores é muitas vezes descentralizada e reativa, dificultando a manutenção proativa e a otimização de processos. O projeto SENSOR DE FABRICA API surge para resolver este desafio, atuando como o sistema nervoso central para o chão de fábrica.
+Em ecossistemas de manufatura moderna, a fragmentação de dados de sensores resulta em manutenções reativas e ineficiência operacional. A SENSOR DE FÁBRICA API foi projetada para atuar como o orquestrador central de telemetria, centralizando a ingestão de dados e transformando sinais brutos em inteligência operacional.
 
-Trata-se de um backend robusto e seguro que irá centralizar o recebimento de dados de telemetria de múltiplos sensores IoT, como temperatura e vibração. O objetivo é transformar dados brutos em informações acionáveis. Para isso, o sistema irá:
+O backend fornecerá uma estrutura robusta para:
 
-º Ingerir e Armazenar: Oferecer um ponto de entrada confiável para os dados dos sensores e persistí-los de forma estruturada.
+- Ingestão e Persistência: Centralizar o recebimento de dados de múltiplos sensores IoT (temperatura, vibração, etc.) de forma estruturada.
 
-º Expor e Gerenciar: Fornecer uma API RESTful para que outras aplicações possam consultar o histórico de dados e gerenciar os sensores cadastrados.
+- Gerenciamento de Ativos: Expor uma interface RESTful para consulta de histórico e administração de sensores cadastrados.
 
-º Alertar e Integrar: Identificar automaticamente anomalias (leituras fora do padrão) e notificar sistemas legados em tempo real, permitindo uma resposta rápida a possíveis falhas.
+- Monitoramento e Resposta: Detectar anomalias em tempo real e disparar notificações para sistemas legados externos.
 
 2. Requisitos 
 
 2. 1. Requisitos Funcionais
 
-RF01: O sistema deve permitir o cadastro de novos sensores, especificando seu tipo (ex: "Termômetro", "Vibrômetro") e localização.
+RF01: Permitir o provisionamento (cadastro) de novos sensores, definindo tipo e local.
 
-RF02: O sistema deve permitir a listagem de todos os sensores cadastrados.
+RF02: Listagem integral de todos os ativos (sensores) monitorados.
 
-RF03: O sistema deve receber e armazenar leituras de dados enviadas pelos sensores. Cada leitura deve ser associada ao seu respectivo sensor.
+RF03: Ingestão de telemetria, associando cada leitura ao seu respectivo sensor de origem.
 
-RF04: O sistema deve expor um endpoint para consultar o histórico de leituras de um sensor específico.
+RF04: Consulta de séries temporais (histórico de leituras) por ID de sensor.
 
-RF05: O acesso para registrar novas leituras e sensores deve ser protegido e exigir autenticação.
+RF05 (Proteção de Recursos): O sistema deve garantir que o acesso aos endpoints de registro (sensores e leituras) seja restrito, exigindo autenticação obrigatória para assegurar a integridade dos dados.
 
-RF06: O sistema deve fornecer um mecanismo de autenticação baseado em token para os dispositivos.
+RF06 (Mecanismo de Autenticação): O sistema deve implementar um serviço de emissão e validação de tokens (JWT - JSON Web Tokens) para a identificação e autorização segura de dispositivos e usuários.
 
-RF07: O sistema deve identificar leituras que excedam limites pré-definidos (anomalias) e notificar um sistema legado externo através de uma chamada de API.
+RF07: Executar lógica de detecção de anomalias com integração via Webhooks/API para sistemas externos.
 
-2. 2. Requisitos Não Funcionais
+RF08: Disponibilizar endpoints otimizados para consumo de Dashboards em tempo real.
 
-RNF01: A API deve garantir a confidencialidade e integridade dos dados, aplicando práticas de segurança essenciais desde o início.
+RF09: Prover exportação de dados em formatos estruturados como JSON e CSV.
 
-RNF02: Manter a estrutura de código em camadas (API, Core, Infra) para garantir que seja fácil de entender, modificar e dar manutenção no futuro.
+2. 2. Requisitos Não Funcionais (RNF)
 
-RNF03: A API deve ser capaz de lidar com falhas em sistemas externos (como o sistema legado) sem travar. Ela deve registrar o erro e continuar sua operação principal.
+RNF01: Garantir a integridade e confidencialidade dos dados trafegados.
 
-RNF04: A lógica de negócio principal (casos de uso, como a detecção de anomalias) deve ser coberta por testes unitários para validar seu comportamento.
+RNF02: Adotar arquitetura em camadas (API, Core, Infra) para facilitar a manutenibilidade.
 
-RNF05: Projeto deve ser entregue com uma documentação README.md que explique o que ele é, como instalá-lo e como executá-lo.
+RNF03: Resiliência a falhas: erros em integrações externas não devem comprometer o fluxo principal de ingestão.
 
-RNF06: A API deve ser projetada sem manter o estado da sessão do cliente no servidor (stateless), um princípio que permite maior flexibilidade e escalabilidade no futuro.
+RNF04: Cobertura de testes unitários para as regras de negócio críticas.
+
+RNF06: Arquitetura Stateless, permitindo escalabilidade horizontal do serviço.
 
 3. Decisões de Arquitetura e Tecnologias
 
-Linguagem/Runtime - Node.js	
-Ambiente de execução JavaScript não-bloqueante, ideal para operações de I/O intensivas como em uma API. Ecossistema (NPM) vasto.
+- Runtime: Node.js (Ambiente não-bloqueante para alta performance em I/O).
 
-Framework - Web	Express.js	
-Minimalista, flexível e com uma comunidade enorme. Perfeito para construir APIs RESTful de forma rápida e eficiente.
+- Framework: Express.js (Agilidade no roteamento e middleware).
 
-Banco de Dados - SQLite (via Sequelize ORM)	
-Relacional, simples de configurar (baseado em arquivo), sem a necessidade de um servidor separado. Ótimo para desenvolvimento e projetos de pequeno/médio porte. O ORM Sequelize abstrai as queries SQL.
+- Persistência: SQLite com Sequelize ORM (Portabilidade e abstração de queries).
 
-Autenticação - JWT (JSON Web Tokens)	
-Padrão de mercado para APIs stateless. Permite que o cliente (sensor/dispositivo) se autentique uma vez e envie o token a cada requisição, sem a necessidade de armazenar sessões no servidor.
+- Segurança: JWT (JSON Web Tokens) para autenticação segura.
 
-Testes - Jest & Supertest	
-Jest é um framework de testes completo e popular no ecossistema JS. Supertest facilita a realização de testes de integração em endpoints HTTP.
+- Qualidade: Jest & Supertest (Testes unitários e de integração).
 
-3. 1. Estratégia para Simulação de Sistemas Externos
+3. 1. Sistema Legado de Alertas (Mock)
 
-Sistema Legado de Alertas:
+Finalidade: Permitir o desenvolvimento e a homologação do RF07 (Detecção de Anomalias) de forma isolada e controlada.
 
-Necessidade: Para desenvolver e testar o Requisito Funcional RF07 de forma isolada, o sistema legado externo será simulado ("mockado").
+Arquitetura da Simulação: Implementação de um serviço independente (Sistema_Legado.js) utilizando Node.js e Express.js para simular o comportamento de um ambiente de produção.
 
-Implementação da Simulação: A simulação será realizada através de um script independente (Sistema_Legado.js). Este script utilizará Node.js e Express para criar um servidor web mínimo que representará o sistema legado.
+Parâmetros de Operação:
 
-Comportamento da Simulação:
+- Isolamento de Porta: O servidor simulado operará em uma porta distinta da API principal (ex: :3001).
 
-º O servidor simulado rodará em uma porta de rede separada da API principal (ex: porta 3001).
+- Interface de Comunicação: Exposição do endpoint único POST /api/alerts.
 
-º Ele exporá um único endpoint: POST /api/alerts.
-
-Sua única função será receber os dados de alerta enviados pela API principal, exibi-los no console/terminal (console.log) para verificação visual e retornar uma resposta de sucesso (HTTP 200 OK).
+- Comportamento: O serviço atuará como um receptor de payloads, realizando o log dos dados recebidos no console para fins de auditoria visual e retornando o status 200 OK para confirmar a ingestão.
 
 4. Modelo de Dados (Entidades e Relacionamentos)
 
-O sistema terá duas entidades principais: Sensor e Leitura.
+O sistema é fundamentado em duas entidades principais com relacionamento de um para muitos (1:N).
 
-Entidade: Sensor
+Entidade: Sensor (Ativo de Fábrica)
+Representa o hardware físico instalado no chão de fábrica.
 
-id: UUID (Chave Primária)
+id: UUID 
 
-tipo: String (ex: "TEMPERATURA", "VIBRAÇÃO")
+tipo: String (ex: "TEMPERATURE", "VIBRATION").
 
-local: String (ex: "Motor Bloco A", "Esteira 2")
+local: String (ex: "Motor Bloco A").
 
-dataCriacao: Timestamp
+dataCriacao: Timestamp do cadastro inicial.
 
-ultimaAtualizacao: Timestamp
+ultimaAtualizacao: Timestamp da última modificação cadastral.
 
-Entidade: Leitura
+Entidade: Reading (Leitura de Telemetria)
+Representa cada dado capturado e enviado pelos sensores.
 
-id: UUID (Chave Primária)
+id: UUID 
 
-temperatura: Float (pode ser nulo se não for um sensor de temperatura)
+sensorId: UUID (Chave Estrangeira, referência ao Sensor).
 
-vibracao: Float (pode ser nulo se não for um sensor de vibração)
+temperatura: Float (Nulo se não aplicável).
 
-dataMedicao: Timestamp (data e hora da leitura)
+vibracao: Float (Nulo se não aplicável).
 
-sensorId:  UUID (Chave Estrangeira, referência ao Sensor.id)
+dataMedicao: Data e hora exata da captura no sensor.
 
-dataRecebido: Timestamp
+dataRecebido: Timestamp de quando o dado foi processado pela API.
 
-Relacionamento: Um Sensor pode ter muitas leituras (Um para muitos).
+5. Principais Endpoints
 
-5. Desenho da API (Endpoints)
-
-Autenticação
-Endpoint: POST /auth/token
-
-Descrição: Gera um token de acesso para um dispositivo.
-
-Autenticação: N/A
-
-Request Body:
-
-JSON
-
-h{
-  "apiKey": "some-key-for-the-device",
-  "apiSecret": "some-secret-for-the-device"
-}
-Response (200 OK):
-
-JSON
-
-{
-  "token": "ey...",
-  "expiresIn": "8h"
-}
-Sensores
-Endpoint: POST /sensors
-
-Descrição: Cadastra um novo sensor.
-
-Autenticação: Obrigatória (JWT)
-
-Request Body:
-
-JSON
-
-{
-  "type": "TEMPERATURE",
-  "location": "Prensa Hidráulica 1"
-}
-Response (201 Created):
-
-JSON
-
-{
-  "id": "uuid-gerado-aqui",
-  "type": "TEMPERATURE",
-  "location": "Prensa Hidráulica 1",
-  "createdAt": "2025-09-18T15:30:00Z"
-}
-Endpoint: GET /sensors
-
-Descrição: Lista todos os sensores.
-
-Autenticação: Obrigatória (JWT)
-
-Response (200 OK):
-
-JSON
-
-[
-  {
-    "id": "uuid-1",
-    "type": "TEMPERATURE",
-    "location": "Prensa Hidráulica 1"
-  },
-  {
-    "id": "uuid-2",
-    "type": "VIBRATION",
-    "location": "Motor da Esteira 3"
-  }
-]
-Leituras
-Endpoint: POST /readings
-
-Descrição: Registra uma nova leitura de um sensor.
-
-Autenticação: Obrigatória (JWT)
-
-Request Body:
-
-JSON
-
-{
-  "sensorId": "uuid-do-sensor",
-  "timestamp": "2025-09-18T15:32:10Z",
-  "temperature": 92.5
-}
-Response (201 Created):
-
-JSON
-
-{
-  "message": "Reading registered successfully"
-}
-Endpoint: GET /sensors/{id}/readings
-
-Descrição: Retorna o histórico de leituras de um sensor específico.
-
-Autenticação: Obrigatória (JWT)
-
-Response (200 OK):
-
-JSON
-
-[
-  {
-    "id": "uuid-leitura-1",
-    "temperature": 92.5,
-    "timestamp": "2025-09-18T15:32:10Z"
-  },
-  {
-    "id": "uuid-leitura-2",
-    "temperature": 91.8,
-    "timestamp": "2025-09-18T15:31:10Z"
-  }
-]
-
+Método    | Endpoint                  |  Descrição                                | Autenticação
+POST      | /auth/token               |  Emissão de token de acesso               | N/A
+POST      | /sensors                  |  Cadastro de novo dispositivo             | JWT
+GET       | /sensors                  |  Listagem de todos os sensores            | JWT
+POST      | /readings                 |  Ingestão de nova leitura                 | JWT
+GET       | /sensors/{id}/readings    |  Histórico de leituras por sensor         | JWT

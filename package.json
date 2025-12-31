@@ -1,0 +1,27 @@
+{
+  "name": "sensor---api",
+  "version": "1.0.0",
+  "description": "Este projeto consiste no desenvolvimento de uma API voltada para o monitoramento e gerenciamento de dados provenientes de sensores. O foco é garantir uma estrutura organizada, escalável e segura para lidar com fluxos de informações em tempo real.",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ayrton01/SENSOR---API.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ayrton01/SENSOR---API/issues"
+  },
+  "homepage": "https://github.com/Ayrton01/SENSOR---API#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}

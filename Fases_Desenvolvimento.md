@@ -1,134 +1,64 @@
 Fases_API - Fabrica_Sensor
 
-1. Fase 1: Fundação e Estrutura do Projeto
-Objetivo: Preparar o ambiente de desenvolvimento e criar a arquitetura de pastas.
+1. Fase 1: Setup e Arquitetura de Referência
+Objetivo: Estabelecer o ambiente de desenvolvimento e a estrutura de pastas seguindo o padrão de camadas (API, Core, Infra).
 
-1. 1. Inicializar o Projeto:
+- Inicialização do Workspace: Estruturar o diretório raiz, inicializar o repositório Git e configurar o arquivo .gitignore para omitir dependências e dados sensíveis.
 
-Crie a pasta do projeto (SENSOR - API).
+- Gerenciamento de Dependências: Instalar o Express.js para orquestração de rotas e o Nodemon como ferramenta de Hot Reload no ambiente de desenvolvimento.
 
-Inicie um projeto Node.js com npm init -y.
+- Definição da Árvore de Diretórios: Criar os diretórios /src/api (interfaces), /src/core (regras de negócio) e /src/infra (persistência e serviços externos) para garantir a separação de responsabilidades.
 
-Inicie o controle de versão com git init. Crie o arquivo .gitignore (para ignorar a pasta node_modules, arquivos .env, etc.).
+- Bootstrap do Servidor: Implementar a instância inicial do Express com uma rota de "Health Check" para validar a conectividade do serviço.
 
-1. 2. Instalar Dependências Essenciais:
+2. Fase 2: Persistência e Domínio (CRUD de Sensores)
+Objetivo: Implementar a camada de persistência e os endpoints básicos de gerenciamento de dispositivos.
 
-Express.js: Para criar o servidor e as rotas (npm install express).
+- Configuração da Camada de Dados: Estabelecer a conexão com o banco de dados SQLite através do Sequelize ORM.
 
-Nodemon: Para reiniciar o servidor automaticamente durante o desenvolvimento (npm install -D nodemon).
+- Mapeamento da Entidade Sensor: Definir o Model Sensor com os atributos id, tipo, local e createdAt.
 
-Configure um script dev no seu package.json para rodar com o nodemon (ex: "dev": "nodemon src/server.js").
+- Implementação da Camada de Interface: Desenvolver os controllers e rotas para POST /sensors e GET /sensors.
 
-1. 3. Criar a Estrutura de Pastas:
+- Desenvolvimento da Lógica de Negócio: Criar os Use Cases e Repositories responsáveis pela criação e recuperação de registros no banco de dados.
 
-Crie a estrutura de diretórios que planejamos anteriormente ( /src, /src/api, /src/core, /src/infra, etc.). Isso manterá seu código organizado desde o primeiro dia.
+3. Fase 3: Ingestão de Telemetria (Leituras)
+Objetivo: Desenvolver o core da aplicação para recebimento e consulta de dados dos sensores.
 
-1. 4. Criar o Servidor Básico:
+- Mapeamento da Entidade Reading: Definir o Model Reading com relacionamento de chave estrangeira (BelongsTo) associado ao Sensor.
 
-Crie um arquivo server.js (ou app.js) que inicializa o Express, define uma porta para o servidor rodar e cria uma rota de teste (ex: GET /) para garantir que tudo está funcionando.
+- Desenvolvimento do Pipeline de Ingestão: Implementar a rota POST /readings com validação de payload para garantir a integridade dos dados recebidos.
 
-2. Fase 2: Funcionalidade Principal (CRUD de Sensores)
-Objetivo: Implementar a capacidade de cadastrar e listar os sensores.
+- Endpoint de Histórico: Implementar explicitamente o endpoint GET /sensors/{id}/readings para alimentar visualizações de dashboards.
 
-2. 1. Configurar o Banco de Dados:
+4. Fase 4: Camada de Segurança e Controle de Acesso
+Objetivo: Implementar blindagem nos endpoints através de autenticação e autorização stateless.
 
-Escolha seu banco de dados (SQLite é ótimo para começar).
+- Provisão de Credenciais: Criar o endpoint POST /auth/token para validação de chaves de API e emissão de tokens JWT.
 
-Instale o driver/ORM necessário (ex: npm install sequelize sqlite3).
+- Desenvolvimento de Middleware: Implementar um interceptador de requisições para validação de integridade e expiração do token no cabeçalho Authorization.
 
-Configure a conexão com o banco de dados na pasta /src/infra/database.
+Proteção de Recursos: Aplicar o middleware de segurança nos endpoints críticos de escrita e leitura.
 
-2. 2. Modelar a Entidade Sensor:
+5. Fase 5: Inteligência de Negócio e Integração
+Objetivo: Implementar o motor de detecção de anomalias e a comunicação com sistemas externos.
 
-Crie o "model" do sensor, definindo seus atributos (ex: id, type, location, createdAt).
+- Motor de Regras (Anomalias): Integrar lógica de validação no Use Case de registro de leitura para identificar disparidades térmicas ou vibracionais (ex: temperatura > 90°C).
 
-2. 3. Implementar Rotas e Controladores:
+- Disparo de Alertas: Utilizar o Axios para realizar chamadas HTTP ao sistema legado simulado, notificando falhas em tempo real.
 
-Em /src/api/routes, crie as rotas POST /sensors e GET /sensors.
+6. Fase 6: Garantia de Qualidade (QA) e Testes
+Objetivo: Validar a resiliência do sistema através de testes automatizados.
 
-Em /src/api/controllers, crie os controladores correspondentes que receberão as requisições e chamarão a lógica de negócio.
+- Testes Unitários: Validar isoladamente as regras de negócio e detecção de anomalias utilizando Mocks para as camadas de infraestrutura.
 
-2. 4. Implementar Casos de Uso e Repositórios:
+- Testes de Integração: Simular fluxos completos de requisição HTTP utilizando Supertest para garantir o funcionamento entre rotas, middlewares e banco de dados.
 
-Em /src/core/use-cases, crie a lógica para "Criar Sensor" e "Listar Sensores".
+7. Fase 7: Otimização e Entrega
+Objetivo: Finalizar a documentação técnica e realizar o tuning de performance do sistema.
 
-Em /src/infra/database/repositories, implemente a lógica que efetivamente salva e busca os dados no banco de dados.
+- Externalização de Configurações: Migrar segredos e URLs para arquivos .env, provendo um .env.example para o deploy.
 
-3. Fase 3: Recebimento de Dados (Leituras dos Sensores)
-Objetivo: Criar o endpoint que será o coração do sistema, recebendo os dados de telemetria.
+- Documentação Final: Consolidar o README.md com instruções de instalação, execução e testes.
 
-3. 1. Modelar a Entidade Reading (Leitura):
-
-Crie o model para as leituras, definindo seus atributos (ex: id, sensorId, temperature, vibration, timestamp). Defina a relação de que uma Leitura "pertence a" um Sensor.
-
-3. 2. Implementar a Rota e Controlador:
-
-Crie a rota POST /readings.
-
-Crie o controlador que valida os dados recebidos (se sensorId, temperature, etc., existem).
-
-3. 3. Implementar o Caso de Uso "Registrar Leitura":
-
-Crie a lógica de negócio que recebe os dados da leitura e os salva no banco de dados através do repositório.
-
-4. Fase 4: Segurança (Autenticação e Autorização)
-Objetivo: Proteger os endpoints para que apenas dispositivos ou usuários autorizados possam interagir com a API.
-
-4. 1. Instalar Dependências de Segurança:
-
-npm install jsonwebtoken bcryptjs.
-
-4. 2. Criar o Endpoint de Autenticação:
-
-Implemente a rota POST /auth/token. A lógica aqui será simples: receber uma apiKey e apiSecret fixas (guardadas em variáveis de ambiente), validá-las e, se estiverem corretas, gerar e retornar um token JWT.
-
-4. 3. Criar o Middleware de Autorização:
-
-Em /src/api/middlewares, crie uma função que extrai o token JWT do cabeçalho Authorization, verifica sua validade e, em caso de sucesso, permite que a requisição continue. Se o token for inválido, retorna um erro 401 Unauthorized.
-
-4. 4. Proteger as Rotas:
-
-Aplique o middleware de autorização nas rotas que precisam de proteção (ex: POST /readings, POST /sensors).
-
-5. Fase 5: Lógica de Negócio e Integração Externa
-Objetivo: Implementar a regra de negócio para detecção de anomalias e a comunicação com o sistema legado.
-
-5. 1. Implementar a Lógica de Anomalia:
-
-Dentro do caso de uso "Registrar Leitura", após salvar os dados, adicione uma verificação. (Ex: if (reading.temperature > 90) { ... }).
-
-5. 2. Configurar o Cliente HTTP:
-
-Instale uma biblioteca para fazer chamadas HTTP, como o Axios (npm install axios).
-
-5. 3. Implementar a Integração:
-
-Crie um serviço na pasta /src/infra/external que será responsável por fazer a chamada POST para a API legada simulada, enviando os detalhes do alerta. Chame este serviço de dentro da lógica de anomalia.
-
-6. Fase 6: Qualidade e Testes
-Objetivo: Garantir que o código funciona como esperado e é resiliente a mudanças.
-
-6. 1. Configurar o Ambiente de Testes:
-
-Instale o Jest (npm install -D jest supertest).
-
-Configure um script test no package.json.
-
-6. 2. Escrever Testes Unitários:
-
-Crie testes para as regras de negócio puras (ex: a função que verifica se uma leitura é uma anomalia). Use "mocks" para isolar a lógica do banco de dados e de APIs externas.
-
-6. 3. Escrever Testes de Integração:
-
-Crie testes que simulam uma requisição HTTP real para seus endpoints e verificam se a resposta e o estado do banco de dados estão corretos. O supertest é perfeito para isso.
-
-7. Fase 7: Finalização e Documentação
-Objetivo: Deixar o projeto pronto para ser apresentado.
-
-7. 1. Configurar Variáveis de Ambiente:
-
-Mova todas as informações sensíveis (segredos de token, URL do banco, URL da API legada) para um arquivo .env e crie um .env.example para documentar quais variáveis são necessárias.
-
-7. 2. Documentação:
-
-Escreva um README.md completo, explicando o que é o projeto, como configurá-lo, como rodá-lo e como testá-lo. Se você optar por usar o Swagger (Opção 2 da nossa conversa anterior), esta é a hora de finalizar a documentação dos endpoints.
+- Performance e Reporting: Otimizar queries para o dashboard e implementar funcionalidades de exportação de dados em formatos estruturados (CSV/JSON).
