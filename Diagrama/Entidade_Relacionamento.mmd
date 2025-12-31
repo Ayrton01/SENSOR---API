@@ -1,0 +1,18 @@
+erDiagram
+    Sensor {
+        UUID id PK "Chave Primária"
+        String tipo
+        String local
+        Timestamp dataCriacao
+        Timestamp ultimaAtualizacao
+    }
+    Leitura {
+        UUID id PK "Chave Primária"
+        Float temperatura
+        Float vibracao
+        Timestamp dataMedicao
+        UUID sensorId FK "Chave Estrangeira"
+        Timestamp dataRecebido
+    }
+
+    Sensor ||--o{ Leitura : "possui"

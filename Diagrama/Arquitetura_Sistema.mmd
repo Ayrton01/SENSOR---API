@@ -1,0 +1,23 @@
+graph TD
+    subgraph "Chão de Fábrica"
+        Sensores[Sensores IoT]
+        Legado[Sistema Legado Simulado]
+    end
+
+    subgraph "Nossa Aplicação (Backend)"
+        API[SENSOR DE FABRICA API - Node.js/Express]
+        DB[(Banco de Dados SQLite)]
+    end
+
+    Sensores -- "1. Envia Leitura (JSON)" --> API
+    API -- "2. Salva no BD" --> DB
+    API -- "3. Detecta Anomalia e Notifica" --> Legado
+    
+    subgraph "Usuários Futuros"
+        Dashboard[Dashboard de Monitoramento]
+    end
+
+    Dashboard -- "4. Pede Histórico" --> API
+    API -- "5. Busca no BD" --> DB
+    DB --> API
+    API --> Dashboard

@@ -1,0 +1,17 @@
+# Arquivos de sistema do windows
+Thumbs.mb
+desktop.ini
+
+# Pastas de ambiente virtual
+venv/
+.env
+
+# Pastas de biblioteca
+node_modules/
+
+# Arquivos de log e temporarios
+*.log
+tmp/
+
+# Configurações pessoais do VS Code
+.vscode/
