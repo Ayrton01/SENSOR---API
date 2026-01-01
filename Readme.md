@@ -8,7 +8,7 @@ Para uma compreensão profunda do projeto, consulte:
 * **[Fases de Desenvolvimento](./Fases_Desenvolvimento.md)**
 
 ## ✨ Funcionalidades Planejadas
-* [N] Cadastro e Gerenciamento de Sensores.
+* [S] Cadastro e Gerenciamento de Sensores.
 * [N] Coleta e armazenamento de dados em tempo real.
 * [N] Autenticação segura via JWT.
 * [N] Geração de relatórios básicos de monitoramento.
