@@ -11,8 +11,8 @@ Para uma compreensão profunda do projeto, consulte:
 
 ## ✨ Funcionalidades Planejadas
 * [S] Cadastro e Gerenciamento de Sensores.
-* [N] Coleta e armazenamento de dados em tempo real.
-* [N] Autenticação segura via JWT.
+* [S] Coleta e armazenamento de dados em tempo real.
+* [S] Autenticação segura via JWT.
 * [N] Geração de relatórios básicos de monitoramento.
 
 ## 🛠️ Tecnologias Utilizadas
