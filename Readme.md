@@ -1,6 +1,8 @@
 # SENSOR - API 
 
-Este projeto consiste no desenvolvimento de uma API voltada para o monitoramento e gerenciamento de dados provenientes de sensores. O foco é garantir uma estrutura organizada, escalável e segura para lidar com fluxos de informações em tempo real.
+<p align="justify">
+   Este projeto consiste no desenvolvimento de uma API voltada para o monitoramento e gerenciamento de dados provenientes de sensores. O foco é garantir uma estrutura organizada, escalável e segura para lidar com fluxos de informações em tempo real.
+</p>
 
 ## 📋 Documentação Completa
 Para uma compreensão profunda do projeto, consulte:

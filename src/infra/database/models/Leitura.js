@@ -2,12 +2,13 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../database');
 
 /**
- * Função auxiliar para formatar a data no padrão de Manaus (UTC-4)
- * Formato final: 2026-01-02 19:57:00
+ * Função auxiliar para formatar a data no padrão de Manaus
+ * Transforma o horário UTC (Z) no horário local de Manaus (UTC-4)
  */
 const formatarDataManaus = (valor) => {
   if (!valor) return null;
   
+  // Opções para o formato: 2026-01-02 19:57:00
   const opcoes = {
     year: 'numeric',
     month: '2-digit',
@@ -29,38 +30,44 @@ const formatarDataManaus = (valor) => {
   const min = partes.find(p => p.type === 'minute').value;
   const seg = partes.find(p => p.type === 'second').value;
 
+  // Retorna no formato que você pediu: AAAA-MM-DD HH:mm:ss
   return `${y}-${m}-${d} ${h}:${min}:${seg}`;
 };
 
-const Sensor = sequelize.define('Sensor', {
+const Leitura = sequelize.define('Leitura', {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
+  valor: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
   tipo: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  local: {
-    type: DataTypes.STRING,
-    allowNull: false
+  dataMedicao: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    // Este "get" intercepta o dado antes de ele sair para a sua tela
+    get() {
+      return formatarDataManaus(this.getDataValue('dataMedicao'));
+    }
   }
 }, {
-  tableName: 'sensores',
+  tableName: 'leituras',
   timestamps: true,
-  // Mapeia os nomes automáticos do Sequelize para o seu planejamento
-  createdAt: 'dataCriacao', 
-  updatedAt: 'ultimaAtualizacao',
-  // Os getters formatam os dados ANTES de serem enviados para a API
+  createdAt: 'dataRecebido', // Renomeia createdAt para dataRecebido
+  updatedAt: false,
+  // Formata também o campo automático dataRecebido
   getterMethods: {
-    dataCriacao() {
-      return formatarDataManaus(this.getDataValue('dataCriacao'));
-    },
-    ultimaAtualizacao() {
-      return formatarDataManaus(this.getDataValue('ultimaAtualizacao'));
+    dataRecebido() {
+      return formatarDataManaus(this.getDataValue('dataRecebido'));
     }
   }
 });
 
-module.exports = Sensor;
+module.exports = Leitura;
