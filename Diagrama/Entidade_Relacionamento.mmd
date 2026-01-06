@@ -2,16 +2,18 @@ erDiagram
     Sensor {
         UUID id PK "Chave Primária"
         String tipo
+        String setor
         String local
+        Float limiteMinimo
+        Float limiteMaximo
         Timestamp dataCriacao
         Timestamp ultimaAtualizacao
     }
     Leitura {
         UUID id PK "Chave Primária"
-        Float temperatura
-        Float vibracao
-        Timestamp dataMedicao
         UUID sensorId FK "Chave Estrangeira"
+        Float valor
+        Timestamp dataMedicao
         Timestamp dataRecebido
     }
 

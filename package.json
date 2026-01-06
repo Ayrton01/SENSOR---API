@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Ayrton01/SENSOR---API#readme",
   "dependencies": {
+    "axios": "^1.13.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "sequelize": "^6.37.7",

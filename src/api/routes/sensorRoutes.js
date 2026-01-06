@@ -1,19 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const sensorController = require('../controllers/sensorController');
-const authMiddleware = require('../middlewares/authMiddleware'); // <--- IMPORTAR
+const authMiddleware = require('../middlewares/authMiddleware');
 
-// Aplicar o middleware: a partir daqui, todas as rotas abaixo exigem token
+// 1. PROTEÇÃO GLOBAL: A partir daqui, todas as rotas exigem token JWT (Fase 4)
 router.use(authMiddleware);
 
-// Define que quando houver um POST no endereço, ele chama a função criar
+// 2. ROTAS DE DEFINIÇÃO (CRUD - Fase 2)
 router.post('/', sensorController.criar);
-
-// Define que quando houver um GET no endereço, ele chama a função listar
 router.get('/', sensorController.listar);
-
-// Novas rotas para Atualizar (PUT) e Deletar (DELETE)
 router.put('/:id', sensorController.atualizar);
 router.delete('/:id', sensorController.remover);
+
+// 3. ROTAS DE INTELIGÊNCIA (BI - Fase 5)
+// Nota: Removido o authMiddleware redundante, pois o router.use acima já protege esta rota.
+router.get('/reports/summary', sensorController.gerarRelatorio);
 
 module.exports = router;

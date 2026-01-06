@@ -26,8 +26,8 @@ app.get('/', (req, res) => {
 
 // Registrar a rota de autenticação antes das outras (Organização)
 app.use('/auth', authRoutes);     // <--- NOVA LINHA AQUI!
-app.use('/sensores', sensorRoutes); 
-app.use('/leituras', leituraRoutes);
+app.use('/sensors', sensorRoutes); 
+app.use('/readings', leituraRoutes);
 
 // 5. INICIALIZAÇÃO
 sequelize.sync().then(() => {

@@ -10,24 +10,43 @@ Para uma compreensão profunda do projeto, consulte:
 * **[Fases de Desenvolvimento](./Fases_Desenvolvimento.md)**
 
 ## ✨ Funcionalidades Planejadas
-* [S] Cadastro e Gerenciamento de Sensores.
-* [S] Coleta e armazenamento de dados em tempo real.
-* [S] Autenticação segura via JWT.
-* [N] Geração de relatórios básicos de monitoramento.
+[S] Cadastro e Gerenciamento de Sensores (com limites de segurança).
+[S] Coleta e armazenamento de telemetria genérica em tempo real.
+[S] Autenticação e proteção de rotas via JWT.
+[S] Motor de Detecção de Anomalias (Comparação dinâmica de limites).
+[S] Integração com Sistema Legado via Webhooks (Axios).
+[N] Dashboard Industrial Reativo para monitoramento (React.js).
 
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Tecnologias utilizadas
 * **Linguagem/Runtime:** Node.js
 * **Framework Web:** Express.js
 * **Banco de Dados:** SQLite com Sequelize ORM
 * **Segurança:** JSON Web Tokens (JWT)
+* **Frontend e Integração:** React.js (via Vite) com Axios
 * **Testes:** Jest & Supertest
+
+## ✨ Diferenciais do Projeto
+* **Ingestão Genérica:** Suporte a qualquer grandeza industrial via campo `valor`.
+* **Segurança Industrial:** Bloqueio de interface (Overlay) e autenticação via JWT.
+* **Arquitetura em Camadas:** Separação clara entre Interface, Core e Infraestrutura.
+* **Monitoramento Ativo:** Dashboard reativo com atualização automática a cada 10 segundos.
 
 ## Como começar
 
 ### Pré-requisitos
 Antes de começar, você precisará ter instalado em sua máquina:
-* [Node.js](https://nodejs.org/en/) (Recomendado v18+)
+* [Node.js](https://nodejs.org/en/) (Recomendado a partir da versão 18)
 * [Git](https://git-scm.com/)
+
+### Mapa do Ecossistema (Portas) 
+Para que o ecossistema de monitoramento funcione plenamente, o projeto opera com três serviços simultâneos. Certifique-se de que as seguintes portas estão disponíveis em seu ambiente:
+
+Módulo           |  Porta   |  Descrição
+API Principal    |  :3000   |  Backend Node.js/Express (Coração do sistema e processamento de regras).
+Dashboard        |  :5173   |  Interface React/Vite (Visualização Industrial e Monitoramento Real-time).
+Sistema Legado   |  :3001   |  Mock receptor de alertas (Simulação de sistema externo de segurança).
+
+Nota: O Dashboard (Frontend) consome dados da API Principal, que por sua vez executa o motor de regras e envia alertas ao Sistema Legado via Webhooks sempre que os limites de segurança operacionais são ultrapassados.
 
 ### Instalação
 1. Clone o repositório:

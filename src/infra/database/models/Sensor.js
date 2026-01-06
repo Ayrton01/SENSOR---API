@@ -3,9 +3,9 @@ const sequelize = require('../database');
 
 /**
  * Função auxiliar para formatar a data no padrão de Manaus (UTC-4)
- * Formato final: 2026-01-02 19:57:00
+ * Formato final: 2026-01-05 18:43:00
  */
-const formatarDataManaus = (valor) => {
+const formatarData = (valor) => {
   if (!valor) return null;
   
   const opcoes = {
@@ -40,11 +40,25 @@ const Sensor = sequelize.define('Sensor', {
   },
   tipo: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false // Ex: Temperatura, Pressão, Umidade
+  },
+  setor: {
+    type: DataTypes.STRING,
+    allowNull: false // Ex: Estamparia, Usinagem, Linha de Montagem
   },
   local: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false // Ex: Máquina A1, Forno 2
+  },
+  limiteMinimo: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+    defaultValue: 0.0
+  },
+  limiteMaximo: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+    defaultValue: 100.0
   }
 }, {
   tableName: 'sensores',
@@ -52,13 +66,14 @@ const Sensor = sequelize.define('Sensor', {
   // Mapeia os nomes automáticos do Sequelize para o seu planejamento
   createdAt: 'dataCriacao', 
   updatedAt: 'ultimaAtualizacao',
+  
   // Os getters formatam os dados ANTES de serem enviados para a API
   getterMethods: {
     dataCriacao() {
-      return formatarDataManaus(this.getDataValue('dataCriacao'));
+      return formatarData(this.getDataValue('dataCriacao'));
     },
     ultimaAtualizacao() {
-      return formatarDataManaus(this.getDataValue('ultimaAtualizacao'));
+      return formatarData(this.getDataValue('ultimaAtualizacao'));
     }
   }
 });
