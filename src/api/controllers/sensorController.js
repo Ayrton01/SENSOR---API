@@ -1,21 +1,18 @@
 const Sensor = require('../../infra/database/models/Sensor');
-const Leitura = require('../../infra/database/models/Leitura');
-const { Op, fn, col } = require('sequelize');
+const GerarResumoBI = require('../../core/use-cases/gerarResumo'); // Importamos a inteligência de BI
 
 module.exports = {
-  // Função para cadastrar (POST) com VALIDAÇÃO AMPLIADA
+  // POST: Cadastrar novo sensor
   async criar(requisicao, resposta) {
     try {
       const { tipo, setor, local, limiteMinimo, limiteMaximo } = requisicao.body;
 
-      // Validação de campos obrigatórios (Strings)
       if (!tipo?.trim() || !setor?.trim() || !local?.trim()) {
         return resposta.status(400).json({ 
           erro: 'Dados inválidos. "tipo", "setor" e "local" são obrigatórios.' 
         });
       }
 
-      // Validação de limites (Garantir que são números)
       if (typeof limiteMinimo !== 'number' || typeof limiteMaximo !== 'number') {
         return resposta.status(400).json({ 
           erro: 'Os limites mínimo e máximo devem ser valores numéricos.' 
@@ -23,11 +20,7 @@ module.exports = {
       }
 
       const novoSensor = await Sensor.create({ 
-        tipo, 
-        setor, 
-        local, 
-        limiteMinimo, 
-        limiteMaximo 
+        tipo, setor, local, limiteMinimo, limiteMaximo 
       });
 
       return resposta.status(201).json(novoSensor);
@@ -37,7 +30,7 @@ module.exports = {
     }
   },
 
-  // Função para listar (GET) - Agora retorna os novos campos automaticamente
+  // GET: Listar todos os sensores
   async listar(requisicao, resposta) {
     try {
       const sensores = await Sensor.findAll();
@@ -47,7 +40,7 @@ module.exports = {
     }
   },
 
-  // Função para atualizar (PUT) com VALIDAÇÃO AMPLIADA
+  // PUT: Atualizar dados do sensor
   async atualizar(requisicao, resposta) {
     try {
       const { id } = requisicao.params;
@@ -56,14 +49,6 @@ module.exports = {
       const sensor = await Sensor.findByPk(id);
       if (!sensor) return resposta.status(404).json({ erro: 'Sensor não encontrado.' });
 
-      // Validação de campos obrigatórios se enviados
-      if (!tipo?.trim() || !setor?.trim() || !local?.trim()) {
-        return resposta.status(400).json({ 
-          erro: 'Dados inválidos. "tipo", "setor" e "local" não podem ser vazios.' 
-        });
-      }
-
-      // Validação de limites numéricos
       if (typeof limiteMinimo !== 'number' || typeof limiteMaximo !== 'number') {
         return resposta.status(400).json({ 
           erro: 'Os limites mínimo e máximo devem ser valores numéricos.' 
@@ -77,7 +62,7 @@ module.exports = {
     }
   },
 
-  // Função para remover (DELETE)
+  // DELETE: Remover sensor
   async remover(requisicao, resposta) {
     try {
       const { id } = requisicao.params;
@@ -91,36 +76,13 @@ module.exports = {
     }
   },
 
+  // GET: Gerar Relatório de BI (Refatorado para Use Case)
   async gerarRelatorio(requisicao, resposta) {
     try {
-      // 1. Total de Sensores por Setor
-      const totalPorSetor = await Sensor.findAll({
-        attributes: ['setor', [fn('COUNT', col('id')), 'quantidade']],
-        group: ['setor']
-      });
+      // Delegamos a agregação de dados e o fuso de Manaus para o Use Case
+      const relatorio = await GerarResumoBI.executar();
 
-      // 2. Estatísticas de Leituras (Média e Pico por Sensor)
-      const estatisticasLeituras = await Leitura.findAll({
-        attributes: [
-          'sensorId',
-          [fn('AVG', col('valor')), 'mediaValor'],
-          [fn('MAX', col('valor')), 'picoValor'],
-          [fn('COUNT', col('Leitura.id')), 'totalLeituras']
-        ],
-        include: [{ model: Sensor, attributes: ['tipo', 'setor', 'local'] }],
-        group: ['sensorId', 'Sensor.id', 'Sensor.tipo', 'Sensor.setor', 'Sensor.local']
-      });
-
-      const dataAtual = new Date();
-      // Formatamos para YYYY-MM-DD HH:mm:ss no fuso de Manaus
-      const dataFormatada = dataAtual.toLocaleString('sv-SE', { timeZone: 'America/Manaus' });
-
-      // 3. Resumo Consolidado para o Dashboard
-      return resposta.json({
-        dataGeracao: dataFormatada, // Agora no formato: 2026-01-05 23:18:01
-        resumoSetores: totalPorSetor,
-        detalhesSensores: estatisticasLeituras
-      });
+      return resposta.json(relatorio);
 
     } catch (erro) {
       console.error(erro);

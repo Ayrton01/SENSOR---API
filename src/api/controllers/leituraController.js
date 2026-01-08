@@ -1,9 +1,8 @@
 const Leitura = require('../../infra/database/models/Leitura');
 const Sensor = require('../../infra/database/models/Sensor');
-const axios = require('axios');
+const AnalisarLeitura = require('../../core/use-cases/analisarLeitura'); // Importamos o Use Case
 
 module.exports = {
-  // POST: Registro de Telemetria com Alerta Sincronizado (Fase 5)
   async cadastrar(requisicao, resposta) {
     try {
       const { valor, sensorId, dataMedicao } = requisicao.body;
@@ -12,51 +11,25 @@ module.exports = {
         return resposta.status(400).json({ erro: 'Dados incompletos!' });
       }
 
-      const sensor = await Sensor.findByPk(sensorId);
-      if (!sensor) {
-        return resposta.status(404).json({ erro: 'O sensor informado não existe.' });
-      }
-
-      const ehAnomalia = valor < sensor.limiteMinimo || valor > sensor.limiteMaximo;
-      let statusOperacional = 'NORMAL';
-
-      if (ehAnomalia) {
-        statusOperacional = 'CRÍTICO';
-        
-        console.log(`\n⚠️  ANOMALIA DETECTADA - INICIANDO DISPARO DE ALERTA`);
-
-        try {
-          // Ajustado para a rota '/api/alerts' e campos esperados pelo Legado
-          await axios.post('http://localhost:3001/api/alerts', {
-            sensorId: sensor.id,
-            tipoSensor: sensor.tipo,      // Nome de campo corrigido
-            setor: sensor.setor,
-            local: sensor.local,
-            valor: valor,                 // Nome de campo corrigido
-            limiteMin: sensor.limiteMinimo,
-            limiteMax: sensor.limiteMaximo,
-            dataMedicao: dataMedicao || new Date().toISOString() // Nome de campo corrigido
-          });
-          console.log('🚀 Alerta entregue com sucesso ao Sistema Legado (:3001)');
-        } catch (erroAxios) {
-          console.error('❌ Erro na integração com o Sistema Legado:', erroAxios.message);
-        }
-      }
-
-      const novaLeitura = await Leitura.create({ valor, sensorId, dataMedicao });
+      // Delegamos toda a lógica para o Use Case
+      const resultado = await AnalisarLeitura.executar({ valor, sensorId, dataMedicao });
 
       return resposta.status(201).json({
-        ...novaLeitura.toJSON(),
-        statusOperacional 
+        ...resultado.leitura,
+        statusOperacional: resultado.statusOperacional
       });
 
     } catch (erro) {
       console.error(erro);
-      return resposta.status(500).json({ erro: 'Erro ao registrar leitura.' });
+      // Tratamento para o erro de sensor não encontrado vindo do Use Case
+      if (erro.message === 'O sensor informado não existe.') {
+        return resposta.status(404).json({ erro: erro.message });
+      }
+      return resposta.status(500).json({ erro: 'Erro ao processar telemetria.' });
     }
   },
 
-  // GET: Listar histórico (Fase 3)
+  // Mantemos as listagens aqui por serem operações simples de leitura
   async listar(requisicao, resposta) {
     try {
       const leituras = await Leitura.findAll({
@@ -69,19 +42,18 @@ module.exports = {
     }
   },
 
-  // GET: Leituras de um sensor específico
+  // GET: Histórico de leituras de um sensor específico
   async listar_Sensor(requisicao, resposta) {
     try {
-      const { sensorId } = requisicao.params;
+      const { id } = requisicao.params;
       const leituras = await Leitura.findAll({
-        where: { sensorId },
+        where: { sensorId: id },
         include: [{ model: Sensor, attributes: ['tipo', 'local'] }],
-        order: [['dataMedicao', 'DESC']]
+        order: [['dataRecebido', 'DESC']]
       });
-      if (leituras.length === 0) return resposta.status(404).json({ mensagem: 'Nenhuma leitura encontrada.' });
       return resposta.json(leituras);
     } catch (erro) {
-      return resposta.status(500).json({ erro: 'Erro ao buscar dados.' });
+      return resposta.status(500).json({ erro: 'Erro ao buscar histórico.' });
     }
   }
 };
