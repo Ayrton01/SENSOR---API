@@ -15,7 +15,7 @@ Para uma compreensão profunda do projeto, consulte:
 * [S] Autenticação e proteção de rotas via JWT.
 * [S] Motor de Detecção de Anomalias (Comparação dinâmica de limites).
 * [S] Integração com Sistema Legado via Webhooks (Axios).
-* [N] Dashboard Industrial Reativo para monitoramento (React.js).
+* [S] Dashboard Industrial Reativo para monitoramento (React.js).
 
 ## 🛠️ Tecnologias utilizadas
 * **Linguagem/Runtime:** Node.js
@@ -28,7 +28,7 @@ Para uma compreensão profunda do projeto, consulte:
 ## ✨ Diferenciais do Projeto
 * **Ingestão Genérica:** Suporte a qualquer grandeza industrial via campo `valor`.
 * **Segurança Industrial:** Bloqueio de interface (Overlay) e autenticação via JWT.
-* **Arquitetura em Camadas:** Separação clara entre Interface, Core e Infraestrutura.
+* **Arquitetura em Camadas:** Separação entre Interface, Core e Infraestrutura.
 * **Monitoramento Ativo:** Dashboard reativo com atualização automática a cada 10 segundos.
 
 ## Como começar
