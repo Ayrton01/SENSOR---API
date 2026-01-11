@@ -564,10 +564,9 @@ body {
 
 .status-pill.critico { 
   
-  background-color: rgba(239, 68, 68, 0.1); 
-  color: #ef4444; 
-  border: 1px solid 
-  rgba(239, 68, 68, 0.2); 
+  background-color: rgba(239, 68, 68, 0.2) !important; 
+  color: #ef4444 !important; 
+  border: 1px solid #ef4444 !important;
 
 }
 
@@ -582,9 +581,9 @@ body {
 
 .status-pill.atencao { 
   
-  background-color: rgba(245, 158, 11, 0.1); 
-  color: #f59e0b; 
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background-color: rgba(245, 158, 11, 0.2) !important; 
+  color: #f59e0b !important; 
+  border: 1px solid #f59e0b !important;
 
 }
 
@@ -665,7 +664,38 @@ html, body {
 
 /* --- 1. ENTRE 1053px e 797px (Tudo em 2 colunas) --- */
 @media (max-width: 1053px) and (min-width: 797px) {
-  .header-container { gap: 40px; justify-content: space-between; }
+  .header-container { 
+    gap: 20px; 
+    justify-content: space-between; 
+    flex-wrap: nowrap !important; /* PROÍBE a quebra de linha para manter tudo em uma fila */
+    align-items: center;
+  }
+
+  /* 1. DIMINUIR O MONITORAMENTO INDUSTRIAL */
+  .title-text h1 {
+    font-size: 18px !important; /* Redução estratégica do título */
+    white-space: nowrap;
+  }
+
+  .title-text p {
+    font-size: 12px !important; /* Redução do subtítulo Manaus */
+  }
+
+  .controls-section {
+    display: flex !important;
+    flex-direction: row !important; /* Força os 3 botões a ficarem lado a lado */
+    align-items: center;
+    gap: 12px;
+    width: auto; /* Impede que a seção de botões ocupe a largura toda e empurre o resto */
+  }
+
+  /* Garante que os botões fiquem compactos nesta faixa de 900px */
+  .select-turno, .btn-atualizar, .btn-logout {
+    width: auto !important;
+    white-space: nowrap; /* Impede que o texto dentro do botão quebre em duas linhas */
+  }
+
+  /* Mantemos sua configuração de colunas para o restante do dashboard */
   .summary-grid, .metrics-row, .sectors-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 15px;
@@ -715,7 +745,7 @@ html, body {
 }
 
 /* --- RESPONSIVIDADE ESTILO BASE44 (Abaixo de 490px) --- */
-@media (max-width: 490px) {
+@media (max-width: 500px) {
 
   /* 1. O CARD: Vira uma coluna com tudo alinhado à esquerda */
   .alert-card {
@@ -802,6 +832,28 @@ html, body {
   }
   .no-alerts-content p {
     font-size: 16px;
+  }
+
+  /* 1. O container que segura o Turno e o Botão vira coluna */
+  .controls-section {
+    flex-direction: column !important; /* Empilha um em cima do outro */
+    width: 100% !important;
+    gap: 12px !important; /* Espaço entre eles */
+    align-items: stretch !important; /* Faz ambos ocuparem a largura toda */
+  }
+
+  /* 2. Ajusta o seletor de Turno e o Botão para preencherem a tela */
+  .select-turno, 
+  .btn-atualizar {
+    width: 100% !important;
+    justify-content: center !important; /* Centraliza o texto e ícone internamente */
+    height: 45px !important; /* Fica maior para facilitar o toque no celular */
+    margin: 0 !important;
+  }
+
+  /* 3. Ajuste opcional para o título não ficar muito grande */
+  .title-text h1 {
+    font-size: 20px !important;
   }
 
 }
@@ -953,28 +1005,6 @@ html, body {
   .alert-card .current-value {
     font-size: 30px !important; /* Diminui um pouco para caber na linha */
   }
-
-  /* 1. O container que segura o Turno e o Botão vira coluna */
-  .controls-section {
-    flex-direction: column !important; /* Empilha um em cima do outro */
-    width: 100% !important;
-    gap: 12px !important; /* Espaço entre eles */
-    align-items: stretch !important; /* Faz ambos ocuparem a largura toda */
-  }
-
-  /* 2. Ajusta o seletor de Turno e o Botão para preencherem a tela */
-  .select-turno, 
-  .btn-atualizar {
-    width: 100% !important;
-    justify-content: center !important; /* Centraliza o texto e ícone internamente */
-    height: 45px !important; /* Fica maior para facilitar o toque no celular */
-    margin: 0 !important;
-  }
-
-  /* 3. Ajuste opcional para o título não ficar muito grande */
-  .title-text h1 {
-    font-size: 20px !important;
-  }
 }
 
 /* --- NOVAS CLASSES EXTRAÍDAS DO APP.JS (REFACTOR) --- */
@@ -1083,6 +1113,25 @@ html, body {
   top: 0;
   left: 0;
   z-index: 1;
+}
+
+/* Botão de Logout */
+.btn-logout {
+  background: #ef4444; /* Vermelho para alerta/saída */
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-logout:hover {
+  background: #dc2626;
 }
 
 /* Tabela */

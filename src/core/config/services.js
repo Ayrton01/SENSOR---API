@@ -3,7 +3,7 @@ module.exports = {
     URL: 'http://localhost:3000'
   },
   SISTEMA_LEGADO: {
-    URL_ALERTS: 'http://localhost:3001/api/alerts'
+    URL: 'http://localhost:3001/api/alerts'
   },
   DASHBOARD: {
     URL: 'http://localhost:5173'

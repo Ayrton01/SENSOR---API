@@ -20,7 +20,12 @@ const formatarData = (valor) => {
   };
 
   const formatador = new Intl.DateTimeFormat('en-CA', opcoes); // 'en-CA' gera YYYY-MM-DD
-  const partes = formatador.formatToParts(new Date(valor));
+  
+  const dataObj = new Date(valor);
+  // Verificação de segurança: Se a data for inválida (Invalid Date), retorna null e não quebra o app
+  if (isNaN(dataObj.getTime())) return null;
+
+  const partes = formatador.formatToParts(dataObj);
   
   const d = partes.find(p => p.type === 'day').value;
   const m = partes.find(p => p.type === 'month').value;

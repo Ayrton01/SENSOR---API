@@ -1,4 +1,5 @@
 const Sensor = require('../../infra/database/models/Sensor');
+const Leitura = require('../../infra/database/models/Leitura');
 const GerarResumoBI = require('../../core/use-cases/gerarResumo'); // Importamos a inteligência de BI
 
 module.exports = {
@@ -88,5 +89,36 @@ module.exports = {
       console.error(erro);
       return resposta.status(500).json({ erro: 'Erro ao gerar relatório de BI.' });
     }
+  },
+
+  // POST: Receber dados de telemetria do sensor
+  async receberLeitura(requisicao, resposta) {
+    try {
+      const { sensorId, valor } = requisicao.body;
+
+      // Validação básica
+      if (!sensorId || valor === undefined) {
+        return resposta.status(400).json({ erro: 'ID do sensor e valor são obrigatórios.' });
+      }
+
+      // Verifica se o sensor existe antes de salvar a leitura
+      const sensorExiste = await Sensor.findByPk(sensorId);
+      if (!sensorExiste) {
+        return resposta.status(404).json({ erro: 'Sensor não encontrado no sistema.' });
+      }
+
+      // Cria o registro na tabela de Leituras
+      const novaLeitura = await Leitura.create({
+        sensorId,
+        valor,
+        dataMedicao: new Date() // Garante o registro do exato momento
+      });
+
+      return resposta.status(201).json(novaLeitura);
+    } catch (erro) {
+      console.error("Erro ao registrar leitura:", erro);
+      return resposta.status(500).json({ erro: 'Erro interno ao salvar leitura.' });
+    }
   }
+  
 };

@@ -2,7 +2,9 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-const PORTA_LEGADO = 3001; // Definida no seu planejamento
+// Importamos as configurações centralizadas
+const services = require('../../core/config/services');
+const PORTA = new URL(services.SISTEMA_LEGADO.URL).port;
 
 // Rota que receberá os alertas de anomalia
 app.post('/api/alerts', (req, res) => {
@@ -20,6 +22,6 @@ app.post('/api/alerts', (req, res) => {
     return res.status(200).json({ status: 'Alerta processado pelo legado' });
 });
 
-app.listen(PORTA_LEGADO, () => {
-    console.log(`✅ Mock do Sistema Legado rodando em http://localhost:${PORTA_LEGADO}`);
+app.listen(PORTA, () => {
+    console.log(`✅ Mock do Sistema Legado rodando em http://localhost:${PORTA}`);
 });

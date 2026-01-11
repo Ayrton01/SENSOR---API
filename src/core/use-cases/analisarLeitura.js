@@ -17,20 +17,22 @@ class AnalisarLeitura {
       statusOperacional = 'CRÍTICO';
       
       // 3. Orquestração de Alerta Externo (Axios)
-      try {
-        await axios.post(services.SISTEMA_LEGADO.URL_ALERTS, {
-          sensorId: sensor.id,
-          tipoSensor: sensor.tipo,
-          setor: sensor.setor,
-          local: sensor.local,
-          valor: valor,
-          limiteMin: sensor.limiteMinimo,
-          limiteMax: sensor.limiteMaximo,
-          dataMedicao: dataMedicao || new Date().toISOString()
-        });
-      } catch (erro) {
-        // Logamos o erro mas permitimos que o Use Case continue (Resiliência)
-        console.error('❌ Falha na notificação externa:', erro.message);
+      if (services.SISTEMA_LEGADO && services.SISTEMA_LEGADO.URL_ALERTS) {
+        try {
+          await axios.post(services.SISTEMA_LEGADO.URL_ALERTS, {
+            sensorId: sensor.id,
+            tipoSensor: sensor.tipo,
+            setor: sensor.setor,
+            local: sensor.local,
+            valor: valor,
+            limiteMin: sensor.limiteMinimo,
+            limiteMax: sensor.limiteMaximo,
+            dataMedicao: dataMedicao || new Date().toISOString()
+          });
+        } catch (erro) {
+          // Logamos o erro mas permitimos que o Use Case continue (Resiliência)
+          console.error('❌ Falha na notificação externa:', erro.message);
+        }
       }
     }
 

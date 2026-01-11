@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors'); // <--- 1. NOVA IMPORTAÇÃO
 const sequelize = require('./infra/database/database');
+const services = require('./core/config/services');
 
 // 1. IMPORTAÇÕES DE ROTAS E MODELOS
 const sensorRoutes = require('./api/routes/sensorRoutes');
@@ -11,7 +13,7 @@ const Sensor = require('./infra/database/models/Sensor');
 const Leitura = require('./infra/database/models/Leitura');
 
 const app = express();
-const PORT = 3000;
+const PORT = new URL(services.API.URL).port;
 
 // 2. CONFIGURAÇÕES
 app.use(cors()); // <--- 2. LIBERA O ACESSO PARA QUALQUER FRONTEND

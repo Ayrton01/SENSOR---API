@@ -1,15 +1,22 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
+import { API } from './services';
+
+import { 
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
+  CartesianGrid, Tooltip, ReferenceLine 
+} from 'recharts';
 
 import { 
   
   // --- Interface e Navegação ---
-  Factory, ChevronDown, RefreshCcw, Clock,
+  Factory, ChevronDown, RefreshCcw, Clock, LogOut,
   
   // --- Alertas e Status ---
   AlertTriangle, Circle,
   
   // --- Sensores (Campo) ---
-  MapPin, Gauge, Thermometer, Droplets,
+  MapPin, Gauge,
   
   // --- Métricas e Sistema ---
   Cpu, Activity, Zap, TrendingUp, TrendingDown
@@ -17,25 +24,70 @@ import {
 } from 'lucide-react';
 
 import { Alerta } from './funcoes/alerta'; // Ajuste: Caminho correto e Case Sensitive (A maiúsculo)
+import { AuthContext } from './token/AuthContext';
+import LoginOverlay from './loginOverlay';
 
 function Dashboard() {
 
-  // Chamamos o seu Hook personalizado
-  const { totalAlertas } = Alerta();
+  // 1. Pegamos os dados de autenticação e a função de logout
+  const { authenticated, loading: authLoading, logout } = useContext(AuthContext);
 
-  // --- TESTE DE CONEXÃO ---
+  // Chamamos o seu Hook personalizado
+  const { totalAlertas, listaAlertas, listaSetores, listaLeituras, metricasTurno,
+    resumoGeral, loading, atualizarDados } = Alerta();
+
+  // --- HOOKS DE ESTADO (Sempre no topo) ---
+  
+  // 1. O ID do sensor que o usuário escolheu no menu
+  const [selectedSensorId, setSelectedSensorId] = useState("");
+
+  // 2. Dados do gráfico
+  const [dadosGrafico, setDadosGrafico] = useState(null);
+
+  // 3. Loading do gráfico
+  const [loadingGrafico, setLoadingGrafico] = useState(false);
+
+  // --- EFEITOS (useEffect) ---
+
+  // 1. Polling (Sincronização Automática)
   useEffect(() => {
-    // Chamando a rota principal da sua API
-    fetch('http://localhost:3000/')
-      .then(response => response.json())
-      .then(data => {
-        console.log("🚀 CONEXÃO COM MANAUS ESTABELECIDA!");
-        console.log("Mensagem da API:", data.message);
+    if (!authenticated) return; 
+
+    const intervalo = setInterval(() => {
+      console.log("Sincronizando Planta Manaus...");
+      atualizarDados(); 
+    }, 10000); 
+
+    return () => clearInterval(intervalo); 
+  }, [authenticated, atualizarDados]);
+
+  // 2. Carregamento do Gráfico
+  useEffect(() => {
+    if (!selectedSensorId) {
+      setDadosGrafico(null);
+      return;
+    }
+
+    setLoadingGrafico(true);
+    
+    axios.get(`${API.URL}/sensors/${selectedSensorId}/history`)
+      .then(response => {
+        setDadosGrafico(response.data);
+        setLoadingGrafico(false);
       })
       .catch(error => {
-        console.error("❌ ERRO NA PONTE:", error);
+        console.error("Erro ao carregar histórico:", error);
+        setLoadingGrafico(false);
       });
-  }, []);
+  }, [selectedSensorId]);
+
+  // --- VERIFICAÇÕES DE SEGURANÇA (Sempre por último, antes do return) ---
+  if (authLoading) return <div className="loading">Verificando credenciais...</div>;
+  if (!authenticated) return <LoginOverlay />;
+
+  if (loading && !resumoGeral) {
+    return <div style={{ color: 'white', padding: '20px', textAlign: 'center' }}>Carregando dados...</div>;
+  }
 
   return (
     <div className="App">
@@ -50,7 +102,14 @@ function Dashboard() {
         </div>
         <div className="controls-section">
           <div className="select-turno"><span>Turno Tarde</span><ChevronDown size={16} /></div>
-          <button className="btn-atualizar"><RefreshCcw size={16} /><span>Atualizar</span></button>
+          <button className="btn-atualizar" onClick={atualizarDados} disabled={loading}>
+            <RefreshCcw size={16} />
+            <span>{loading ? '...' : 'Atualizar'}</span>
+          </button>
+          <button className="btn-logout" onClick={logout}>
+            <LogOut size={16} />
+            <span>Sair do Painel</span>
+          </button>
         </div>
       </header>
 
@@ -58,6 +117,7 @@ function Dashboard() {
       <main className="alerts-section">
         <div className="alerts-title">
           <AlertTriangle size={22} />
+          {/* O número agora vem direto do total calculado na função */}
           <span>Alertas Críticos ({totalAlertas})</span>
         </div>
 
@@ -65,12 +125,10 @@ function Dashboard() {
           /* ESTADO POSITIVO: APARECE QUANDO NÃO HÁ ALERTAS */
           <div className="no-alerts-card">
             <div className="no-alerts-content">
-              {/* Ícone de check para dar confiança ao operador */}
               <div className="success-icon-circle">
                 <Circle size={40} color="#10b981" fill="rgba(16, 185, 129, 0.2)" />
                 <TrendingDown size={20} color="#10b981" className="pos-absolute" />
               </div>
-              
               <p>
                 Não há alertas críticos 
                 <AlertTriangle size={18} className="icon-inline-text" />
@@ -79,47 +137,41 @@ function Dashboard() {
             </div>
           </div>
         ) : (
-          /* ESTADO CRÍTICO: SEUS CARDS ORIGINAIS */
+          /* ESTADO CRÍTICO: Geração Automática com .map() */
           <>
-            {/* Card 01 - Motor Injetora */}
-            <div className="alert-card">
-              <div className="icon-circle"><AlertTriangle color="#ef4444" size={32} /></div>
-              <div className="flex-1">
-                <div className="alert-header-row">
-                  <span className="badge-critical">CRÍTICO</span>
-                  <span className="alert-action-text">Ação imediata necessária</span>
+            {listaAlertas.map((sensor) => (
+              <div className="alert-card" key={sensor.id}>
+                <div className="icon-circle">
+                  <AlertTriangle color="#ef4444" size={32} />
                 </div>
-                <h2 className="alert-sensor-title">Temp. Motor Injetora 01</h2>
-                <div className="alert-meta-row">
-                  <span className="alert-meta-item"><MapPin size={16}/> Setor de Injetoras</span>
-                  <span className="alert-meta-item"><Gauge size={16}/> temperatura</span>
-                </div>
-                <div className="value-limit-container">
-                  <div className="current-value">92.5<span className="unit-text">°C</span></div>
-                  <span className="limit-text">Limite: 85 °C</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 02 - Vibração Esteira */}
-            <div className="alert-card">
-              <div className="icon-circle"><AlertTriangle color="#ef4444" size={32} /></div>
-              <div className="flex-1">
-                <div className="alert-header-row">
-                  <span className="badge-critical">CRÍTICO</span>
-                  <span className="alert-action-text">Ação imediata necessária</span>
-                </div>
-                <h2 className="alert-sensor-title">Vibração Esteira A1</h2>
-                <div className="alert-meta-row">
-                  <span className="alert-meta-item"><MapPin size={16}/> Linha de Montagem A</span>
-                  <span className="alert-meta-item"><Gauge size={16}/> vibração</span>
-                </div>
-                <div className="value-limit-container">
-                  <div className="current-value">5.2<span className="unit-text">mm/s</span></div>
-                  <span className="limit-text">Limite: 4.5 mm/s</span>
+                <div className="flex-1">
+                  <div className="alert-header-row">
+                    <span className="badge-critical">CRÍTICO</span>
+                    <span className="alert-action-text">Ação imediata necessária</span>
+                  </div>
+                  
+                  {/* Título dinâmico */}
+                  <h2 className="alert-sensor-title">{sensor.nome}</h2>
+                  
+                  <div className="alert-meta-row">
+                    <span className="alert-meta-item">
+                      <MapPin size={16}/> {sensor.setor}
+                    </span>
+                    <span className="alert-meta-item">
+                      <Gauge size={16}/> {sensor.tipo || 'temperatura'}
+                    </span>
+                  </div>
+                  
+                  {/* No Dashboard.js, dentro do map da listaAlertas */}
+                  <div className="current-value">
+                    {/* Antes era sensor.valor, agora é o valorDestaque que criamos */}
+                    {sensor.valorDestaque}
+                    <span className="unit-text">{sensor.unidade}</span>
+                  </div>
+                  <span className="limit-text"> Limite: {sensor.limite} </span>
                 </div>
               </div>
-            </div>
+            ))}
           </>
         )}
       </main>
@@ -147,17 +199,31 @@ function Dashboard() {
           </div>
 
           <div className="summary-card">
-            <div><p className="summary-label">Sensores Ativos</p><h3 className="summary-value">8</h3><p className="summary-subtext">de 8 instalados</p></div>
+            <div>
+              <p className="summary-label">Sensores Ativos</p>
+              <h3 className="summary-value">{resumoGeral.sensoresAtivos}</h3>
+              <p className="summary-subtext">de {resumoGeral.sensoresTotal} instalados</p>
+            </div>
             <div className="summary-icon"><Cpu size={20}/></div>
           </div>
 
+          {/* Card 03: Leituras Hoje (Dinâmico) */}
           <div className="summary-card">
-            <div><p className="summary-label">Leituras Hoje</p><h3 className="summary-value">22</h3><p className="summary-subtext">últimas 24h</p></div>
+            <div>
+              <p className="summary-label">Leituras Hoje</p>
+              <h3 className="summary-value">{resumoGeral.leiturasHoje}</h3>
+              <p className="summary-subtext">últimas 24h</p>
+            </div>
             <div className="summary-icon"><Activity size={20}/></div>
           </div>
 
+          {/* Card 04: Eficiência MOMENTÂNEA (Dinâmico) */}
           <div className="summary-card green">
-            <div><p className="summary-label">Eficiência</p><h3 className="summary-value">91%</h3><p className="summary-subtext">operação normal</p></div>
+            <div>
+              <p className="summary-label">Eficiência Atual</p>
+              <h3 className="summary-value">{resumoGeral.eficienciaAtual}</h3>
+              <p className="summary-subtext">operação em tempo real</p>
+            </div>
             <div className="summary-icon"><TrendingUp size={20}/></div>
           </div>
         </div>
@@ -171,10 +237,12 @@ function Dashboard() {
               <h3>Métricas do Turno</h3>
               <div className="metrics-subtitle">
                 <Clock size={16} />
-                <span>Manhã (06h-14h)</span>
+                {/* Período dinâmico */}
+                <span>{metricasTurno.periodo}</span>
               </div>
             </div>
-            <div className="readings-badge">18 leituras</div>
+            {/* Contagem de leituras dinâmica */}
+            <div className="readings-badge">{metricasTurno.totalLeituras} leituras</div>
           </div>
 
           <div className="metrics-row">
@@ -182,159 +250,91 @@ function Dashboard() {
               <div className="metric-label-group text-slate">
                 <Activity size={16} /><span>Média</span>
               </div>
-              <span className="metric-value-big font-bold">72.5</span>
+              <span className="metric-value-big font-bold">{metricasTurno.media}</span>
             </div>
 
             <div className="metric-box-item">
               <div className="metric-label-group text-red-light">
                 <TrendingUp size={16} /><span>Pico Máximo</span>
               </div>
-              <span className="metric-value-big font-bold text-red-light">248.5</span>
+              <span className="metric-value-big font-bold text-red-light">{metricasTurno.picoMaximo}</span>
             </div>
 
             <div className="metric-box-item">
               <div className="metric-label-group text-blue-light">
                 <TrendingDown size={16} /><span>Mínimo</span>
               </div>
-              <span className="metric-value-big font-bold text-blue-light">2.8</span>
+              <span className="metric-value-big font-bold text-blue-light">{metricasTurno.minimo}</span>
             </div>
 
             <div className="metric-box-item">
               <div className="metric-label-group text-green">
                 <Zap size={16} /><span>Eficiência</span>
               </div>
-              <span className="metric-value-big font-bold text-green">72%</span>
+              <span className="metric-value-big font-bold text-green">{metricasTurno.eficienciaTurno}</span>
             </div>
           </div>
         </div>
       </section>
 
+      {/* SEÇÃO: VISÃO POR SETOR AUTOMÁTICA */}
       <section className="sectors-section">
         <h2 className="sectors-title">Visão por Setor</h2>
         
         <div className="sectors-grid">
-          
-          {/* Linha de Montagem A - ALERTA */}
-          <div className="sector-card highlight-alert">
-            <div className="sector-card-header">
-              <div className="sector-name-group">
-                <Circle size={10} fill="#ef4444" color="#ef4444" />
-                <span>Linha de Montagem A</span>
+          {listaSetores.map((setor) => (
+            /* O card muda de classe sozinho se o status for 'alerta' */
+            <div key={setor.id} className={`sector-card ${setor.status === 'alerta' ? 'highlight-alert' : ''}`}>
+              
+              <div className="sector-card-header">
+                <div className="sector-name-group">
+                  {/* O círculo muda de cor automaticamente */}
+                  <Circle 
+                    size={10} 
+                    fill={setor.status === 'alerta' ? "#ef4444" : "#10b981"} 
+                    color={setor.status === 'alerta' ? "#ef4444" : "#10b981"} 
+                  />
+                  <span>{setor.nome}</span>
+                </div>
+                <span className="sensor-count">{setor.sensores.length} sensores</span>
               </div>
-              <span className="sensor-count">1 sensores</span>
-            </div>
-            <div className="sector-sensors-list">
-              <div className="sensor-item-row">
-                <div className="sensor-info"><Gauge size={16}/> Vibração Esteira A1</div>
-                <div className="sensor-value-status text-alert">5.2 <small>mm/s</small></div>
-              </div>
-            </div>
-          </div>
 
-          {/* Linha de Montagem B - NORMAL */}
-          <div className="sector-card">
-            <div className="sector-card-header">
-              <div className="sector-name-group">
-                <Circle size={10} fill="#10b981" color="#10b981" />
-                <span>Linha de Montagem B</span>
-              </div>
-              <span className="sensor-count">1 sensores</span>
-            </div>
-            <div className="sector-sensors-list">
-              <div className="sensor-item-row">
-                <div className="sensor-info"><Thermometer size={16}/> Temp. Forno Cura</div>
-                <div className="sensor-value-status text-normal">178.5 <small>°C</small></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Setor de Injetoras - ALERTA */}
-          <div className="sector-card highlight-alert">
-            <div className="sector-card-header">
-              <div className="sector-name-group">
-                <Circle size={10} fill="#ef4444" color="#ef4444" />
-                <span>Setor de Injetoras</span>
-              </div>
-              <span className="sensor-count">2 sensores</span>
-            </div>
-            <div className="sector-sensors-list">
-              <div className="sensor-item-row">
-                <div className="sensor-info"><Thermometer size={16}/> Temp. Motor Inje...</div>
-                <div className="sensor-value-status text-alert">92.5 <small>°C</small></div>
-              </div>
-              <div className="sensor-item-row">
-                <div className="sensor-info"><Gauge size={16}/> Pressão Linha Hid...</div>
-                <div className="sensor-value-status text-normal">215.0 <small>bar</small></div>
+              <div className="sector-sensors-list">
+                {/* Segundo MAP: Para listar os sensores de cada setor */}
+                {setor.sensores.map((s) => (
+                  <div key={s.id} className="sensor-item-row">
+                    <div className="sensor-info">
+                      <Gauge size={16}/> {s.nome}
+                    </div>
+                    {/* A cor do valor muda se o sensor for crítico */}
+                    <div className={`sensor-value-status ${s.critico ? 'text-alert' : 'text-normal'}`}>
+                      {s.valor} <small>{s.unidade}</small>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* Estamparia - NORMAL */}
-          <div className="sector-card">
-            <div className="sector-card-header">
-              <div className="sector-name-group">
-                <Circle size={10} fill="#10b981" color="#10b981" />
-                <span>Estamparia</span>
-              </div>
-              <span className="sensor-count">1 sensores</span>
-            </div>
-            <div className="sector-sensors-list">
-              <div className="sensor-item-row">
-                <div className="sensor-info"><Zap size={16}/> Corrente Prensa 02</div>
-                <div className="sensor-value-status text-normal">38.5 <small>A</small></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Almoxarifado - NORMAL */}
-          <div className="sector-card">
-            <div className="sector-card-header">
-              <div className="sector-name-group">
-                <Circle size={10} fill="#10b981" color="#10b981" />
-                <span>Almoxarifado</span>
-              </div>
-              <span className="sensor-count">1 sensores</span>
-            </div>
-            <div className="sector-sensors-list">
-              <div className="sensor-item-row">
-                <div className="sensor-info"><Droplets size={16}/> Umidade Almoxa...</div>
-                <div className="sensor-value-status text-normal">58.5 <small>%</small></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Sala de Compressores - NORMAL */}
-          <div className="sector-card">
-            <div className="sector-card-header">
-              <div className="sector-name-group">
-                <Circle size={10} fill="#10b981" color="#10b981" />
-                <span>Sala de Compressores</span>
-              </div>
-              <span className="sensor-count">2 sensores</span>
-            </div>
-            <div className="sector-sensors-list">
-              <div className="sensor-item-row">
-                <div className="sensor-info"><Gauge size={16}/> Pressão Compres...</div>
-                <div className="sensor-value-status text-normal">8.2 <small>bar</small></div>
-              </div>
-              <div className="sensor-item-row">
-                <div className="sensor-info"><Gauge size={16}/> Vibração Motor B...</div>
-                <div className="sensor-value-status text-normal">2.8 <small>mm/s</small></div>
-              </div>
-            </div>
-          </div>
-
+          ))}
         </div>
       </section>
 
-      {/* SEÇÃO: ANÁLISE DETALHADA */}
+      {/* SEÇÃO: ANÁLISE DETALHADA (AGORA AUTOMÁTICA) */}
       <section className="analysis-section">
         <div className="analysis-header">
           <h2 className="analysis-title">Análise Detalhada</h2>
-          <select className="analysis-select">
-            <option>Vibração Esteira A1</option>
-            <option>Temp. Motor Injetora 01</option>
-            <option>Temp. Forno Cura</option>
+          <select 
+            className="analysis-select"
+            value={selectedSensorId}
+            onChange={(e) => setSelectedSensorId(e.target.value)}
+          >
+            <option value="">Selecione um Sensor</option>
+            {listaSetores.map((setor) => (
+              <optgroup key={setor.id} label={setor.nome}>
+                {setor.sensores.map((s) => (
+                  <option key={s.id} value={s.id}>{s.nome}</option>
+                ))}
+              </optgroup>
+            ))}
           </select>
         </div>
 
@@ -342,43 +342,82 @@ function Dashboard() {
           <div className="chart-info-header">
             <div className="chart-labels">
               <h3>Evolução das Leituras</h3>
-              <p>Vibração Esteira A1 - Últimas 24h</p>
+              <p>{dadosGrafico ? dadosGrafico.nome : "Aguardando seleção..."}</p>
             </div>
             <div className="chart-legend">
-              <div className="legend-line"></div>
-              <span>Limite: 4.5</span>
+              <div className="legend-line" style={{ backgroundColor: '#f6ad55', border: 'none' }}></div>
+              <span>Limite: {dadosGrafico ? `${dadosGrafico.limiteMaximo} ${dadosGrafico.unidade}` : "--"}</span>
             </div>
           </div>
 
-          {/* Representação Visual do Gráfico */}
-          <div className="chart-area-mock">
-            {/* Linhas de Grade e Limite (O que você já tem) */}
-            <div className="chart-grid-wrapper">
-              <div className="chart-grid-line"></div>
-              <div className="chart-grid-line"></div>
-              <div className="chart-limit-line"></div>
-              <div className="chart-grid-line"></div>
-            </div>
+          {/* ÁREA DO GRÁFICO REAL (RECHARTS) */}
+          <div className="chart-container-real" style={{ width: '100%', height: 300, marginTop: '20px' }}>
+            {dadosGrafico ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dadosGrafico.historico} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* Grid pontilhado igual ao Print 1 */}
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3748" />
+                  
+                  <XAxis 
+                    dataKey="horario" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{fill: '#94a3b8', fontSize: 12}}
+                    dy={10}
+                  />
+                  
+                  <YAxis 
+                    hide={false} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{fill: '#94a3b8', fontSize: 12}}
+                    domain={[0, 'auto']} 
+                  />
 
-            {/* LINHA "FAKE" PARA O VISUAL */}
-            <svg className="chart-svg">
-              <path 
-                d="M 0 180 Q 150 220 300 190 T 600 150 T 900 120" 
-                fill="none" 
-                stroke="#06b6d4" 
-                strokeWidth="3"
-              />
-              {/* Ponto de Alerta Vermelho no final */}
-              <circle cx="900" cy="120" r="5" fill="#ef4444" />
-            </svg>
-            
-            <span className="time-label">11:15</span>
-            <span className="time-label">22:15</span>
-            <span className="time-label text-red">06:15</span>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                    itemStyle={{ color: '#06b6d4' }}
+                  />
+
+                  {/* Linha de Limite Laranja (ReferenceLine) */}
+                  <ReferenceLine 
+                    y={dadosGrafico.limiteMaximo} 
+                    stroke="#f6ad55" 
+                    strokeDasharray="5 5" 
+                    label={{ position: 'right', value: 'LIMITE', fill: '#f6ad55', fontSize: 10 }} 
+                  />
+
+                  {/* A Linha Azul com os Pontos */}
+                  <Area 
+                    type="monotone" 
+                    dataKey="valor" 
+                    stroke="#06b6d4" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorValor)" 
+                    dot={{ r: 4, fill: '#06b6d4', strokeWidth: 2, stroke: '#0f172a' }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="chart-placeholder">
+                <Activity size={48} color="#1e293b" />
+                <p>Selecione um sensor para visualizar a telemetria</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
-
+      
+      {/* SEÇÃO: ÚLTIMAS LEITURAS AUTOMÁTICA */}
       <section className="readings-section">
         <div className="readings-card">
           <div className="readings-header">
@@ -386,7 +425,7 @@ function Dashboard() {
             <p>Monitoramento em tempo real</p>
           </div>
 
-          {/* Cabeçalho da Tabela */}
+          {/* Cabeçalho da Tabela (Fixo) */}
           <div className="table-grid-row table-head">
             <span>Sensor</span>
             <span>Setor</span>
@@ -395,50 +434,39 @@ function Dashboard() {
             <span>Horário</span>
           </div>
 
-          {/* Linha: Temp. Motor Injetora 01 */}
-          <div className="table-grid-row">
-            <span className="sensor-name-cell">Temp. Motor Injetora 01</span>
-            <div className="cell-with-icon"><MapPin size={14}/> Injetoras</div>
-            <div className="text-red font-bold">92.5 <small className="unit-small">°C</small></div>
-            <div><span className="status-pill critico">CRÍTICO</span></div>
-            <div className="cell-with-icon"><Clock size={14}/> 06:30</div>
-          </div>
-
-          {/* Linha: Pressão Linha Hidráulica */}
-          <div className="table-grid-row">
-            <span className="sensor-name-cell">Pressão Linha Hidráulica</span>
-            <div className="cell-with-icon"><MapPin size={14}/> Injetoras</div>
-            <div className="text-orange font-bold">248.5 <small className="unit-small">bar</small></div>
-            <div><span className="status-pill atencao">ATENÇÃO</span></div>
-            <div className="cell-with-icon"><Clock size={14}/> 06:25</div>
-          </div>
-
-          {/* Linha: Corrente Prensa 02 */}
-          <div className="table-grid-row">
-            <span className="sensor-name-cell">Corrente Prensa 02</span>
-            <div className="cell-with-icon"><MapPin size={14}/> Estamparia</div>
-            <div className="text-green font-bold">38.5 <small className="unit-small">A</small></div>
-            <div><span className="status-pill normal">NORMAL</span></div>
-            <div className="cell-with-icon"><Clock size={14}/> 06:20</div>
-          </div>
-
-          {/* Linha: Vibração Esteira A1 */}
-          <div className="table-grid-row">
-            <span className="sensor-name-cell">Vibração Esteira A1</span>
-            <div className="cell-with-icon"><MapPin size={14}/> Linha Montagem A</div>
-            <div className="text-red font-bold">5.2 <small className="unit-small">mm/s</small></div>
-            <div><span className="status-pill critico">CRÍTICO</span></div>
-            <div className="cell-with-icon"><Clock size={14}/> 06:15</div>
-          </div>
-
-          {/* Linha: Pressão Compressor 01 */}
-          <div className="table-grid-row">
-            <span className="sensor-name-cell">Pressão Compressor 01</span>
-            <div className="cell-with-icon"><MapPin size={14}/> Compressores</div>
-            <div className="text-green font-bold">8.2 <small className="unit-small">bar</small></div>
-            <div><span className="status-pill normal">NORMAL</span></div>
-            <div className="cell-with-icon"><Clock size={14}/> 06:00</div>
-          </div>
+          {/* MAP: Criando cada linha da tabela dinamicamente */}
+          {listaLeituras.map((leitura) => (
+            <div key={leitura.id} className="table-grid-row">
+              <span className="sensor-name-cell">{leitura.sensor}</span>
+              
+              <div className="cell-with-icon">
+                <MapPin size={14}/> {leitura.setor}
+              </div>
+              
+              {/* O valor muda de cor conforme o status */}
+              <div className={`font-bold ${
+                leitura.status === 'CRÍTICO' ? 'text-red' : 
+                leitura.status === 'ATENÇÃO' ? 'text-orange' : 'text-green'
+              }`}>
+                {leitura.valor} <small className="unit-small">{leitura.unidade}</small>
+              </div>
+              
+              <div>
+              
+              {/* A pílula de status também é dinâmica */}
+                <span className={`status-pill ${
+                  leitura.status === 'CRÍTICO' ? 'critico' : 
+                  leitura.status === 'ATENÇÃO' ? 'atencao' : 'normal'
+                }`}>
+                  {leitura.status}
+                </span>
+              </div>
+              
+              <div className="cell-with-icon">
+                <Clock size={14}/> {leitura.horario}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
       

@@ -1,0 +1,55 @@
+.login-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10, 14, 23, 0.95); /* Escuro semi-transparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Fica na frente de tudo */
+}
+
+.login-box {
+    background: #1a1f2b;
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #343a40;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.login-box input {
+    width: 100%;
+    padding: 12px;
+    margin: 20px 0;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    color: white;
+    border-radius: 6px;
+}
+
+.login-box button {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Dica para o LoginOverlay.css */
+.erro-msg {
+    color: #ff4d4d;
+    display: block;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.login-box button:hover {
+    background: #0056b3; /* Um azul um pouco mais escuro ao passar o mouse */
+    transition: background 0.3s ease;
+}
+
+.login-box button:active {
+    transform: scale(0.98); /* Efeito de "clique" físico */
+}
