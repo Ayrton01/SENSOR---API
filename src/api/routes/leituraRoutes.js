@@ -5,7 +5,7 @@ const authMiddleware = require('../middlewares/authMiddleware'); // <--- 1. IMPO
 
 // 2. APLICAR O FILTRO DE SEGURANÇA
 // A partir desta linha, todas as rotas de leitura exigem o Token JWT
-//router.use(authMiddleware);
+router.use(authMiddleware);
 
 // Rota para registar telemetria (POST)
 router.post('/', leituraController.cadastrar);

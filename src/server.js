@@ -32,8 +32,12 @@ app.use('/auth', authRoutes);
 app.use('/sensors', sensorRoutes); 
 app.use('/readings', leituraRoutes);
 
-// 5. INICIALIZAÇÃO
-sequelize.sync().then(() => {
-  console.log('Banco sincronizado!');
-  app.listen(PORT, () => console.log(`Servidor na porta ${PORT}`));
-});
+if (process.env.NODE_ENV !== 'test') {
+    sequelize.sync().then(() => {
+        console.log('Banco sincronizado!');
+        app.listen(PORT, () => console.log(`Servidor na porta ${PORT}`));
+    });
+}
+
+// FORMA CORRETA DE EXPORTAR EM COMMONJS (para o Supertest ler)
+module.exports = app;

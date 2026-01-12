@@ -29,11 +29,17 @@ module.exports = {
     }
   },
 
-  // Mantemos as listagens aqui por serem operações simples de leitura
+// GET: Listagem Geral (Otimizada)
   async listar(requisicao, resposta) {
     try {
       const leituras = await Leitura.findAll({
-        include: [{ model: Sensor, attributes: ['tipo', 'local', 'setor'] }],
+        limit: 50, // Mantém o painel leve
+        // PERFORMANCE: Trazemos apenas as colunas necessárias para o gráfico e tabela
+        attributes: ['id', 'valor', 'status', 'dataRecebido', 'sensorId'], 
+        include: [{ 
+          model: Sensor, 
+          attributes: ['tipo', 'local', 'setor'] 
+        }],
         order: [['dataRecebido', 'DESC']]
       });
       return resposta.json(leituras);
@@ -42,13 +48,18 @@ module.exports = {
     }
   },
 
-  // GET: Histórico de leituras de um sensor específico
+  // GET: Histórico de um sensor específico (Otimizada)
   async listar_Sensor(requisicao, resposta) {
     try {
       const { id } = requisicao.params;
       const leituras = await Leitura.findAll({
         where: { sensorId: id },
-        include: [{ model: Sensor, attributes: ['tipo', 'local'] }],
+        limit: 30, // Histórico individual costuma ser mais focado nas últimas medições
+        attributes: ['id', 'valor', 'status', 'dataRecebido'], // Payload reduzido
+        include: [{ 
+          model: Sensor, 
+          attributes: ['tipo', 'local'] 
+        }],
         order: [['dataRecebido', 'DESC']]
       });
       return resposta.json(leituras);

@@ -4,7 +4,7 @@
   "description": "Este projeto consiste no desenvolvimento de uma API voltada para o monitoramento e gerenciamento de dados provenientes de sensores. O foco é garantir uma estrutura organizada, escalável e segura para lidar com fluxos de informações em tempo real.",
   "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
     "dev": "nodemon src/server.js"
   },
   "repository": {
@@ -29,6 +29,10 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "@testing-library/jest-dom": "^6.9.1",
+    "jsdom": "^27.4.0",
+    "nodemon": "^3.1.11",
+    "supertest": "^7.2.2",
+    "vitest": "^4.0.16"
   }
 }

@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
 
-// Em um projeto real, isso ficaria em um arquivo .env (variável de ambiente)
+/**
+ * Controller de Autenticação - Planta Manaus
+ * Responsável por validar a API Key e fornecer o Token JWT para acesso seguro.
+ */
+
+// Em um projeto real, isso ficaria no arquivo .env
 const JWT_SECRET = '1346798250'; 
 
 module.exports = {
@@ -8,17 +13,34 @@ module.exports = {
     try {
       const { apiKey } = requisicao.body;
 
-      // Simulando uma validação simples para a fábrica
+      // 1. VALIDAÇÃO DA CHAVE MESTRA
+      // Padronizado para 'message' e 'Chave Inválida!' para alinhar com o arquivo de teste
       if (apiKey !== 'sensor-api-secret-2026') {
-        return resposta.status(401).json({ erro: 'Chave de API inválida!' });
+        return resposta.status(401).json({ 
+          message: 'Chave Inválida!' 
+        });
       }
 
-      // O Token expira em 1 hora para segurança (Fase 4: Expiração)
-      const token = jwt.sign({ projeto: 'FactorySense' }, JWT_SECRET, { expiresIn: '1h' });
+      // 2. GERAÇÃO DO TOKEN (Fase 4: Segurança Industrial)
+      // O Token expira em 1 hora para evitar acessos prolongados sem revalidação
+      const token = jwt.sign(
+        { projeto: 'PlantaManaus_Sense' }, 
+        JWT_SECRET, 
+        { expiresIn: '1h' }
+      );
 
-      return resposta.json({ auth: true, token });
+      // 3. RESPOSTA DE SUCESSO
+      return resposta.json({ 
+        auth: true, 
+        token 
+      });
+
     } catch (erro) {
-      return resposta.status(500).json({ erro: 'Erro ao gerar o token.' });
+      console.error('Erro na Autenticação:', erro);
+      
+      return resposta.status(500).json({ 
+        message: 'Erro interno ao gerar o token de acesso.' 
+      });
     }
   }
 };
